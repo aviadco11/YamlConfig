@@ -1,0 +1,26 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: backup-pg
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: postgresql
+            image: postgres:11.13
+            imagePullPolicy: IfNotPresent
+            command: ["/bin/sh"]
+            args: ["-c", "export PGPASSWORD='GvBc3PVDM3'; pg_dump -U postgres --host postgre1-postgresql -p 5432 postgres > /bitnami/postgresql/bck-$(date +%m-%d-%Y-%H-%M).sql"]
+            volumeMounts:
+            - mountPath: /bitnami/postgresql
+              name: postgres-pv-volume
+          restartPolicy: OnFailure
+          volumes:
+          - name: postgres-pv-volume
+            persistentVolumeClaim:
+              claimName: data-postgre1-postgresql-0
+      backoffLimit: 6
+  suspend: false
